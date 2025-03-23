@@ -1,47 +1,22 @@
-import React, { useState } from 'react';
-import { createTask } from '../api/taskApi';
+import React from 'react';
 import { TaskStatus } from '../types/Task';
+import { useTaskForm } from '../hooks/useTaskForm';
 
 interface TaskFormProps {
   onTaskAdded: () => void;
 }
 
 const TaskForm: React.FC<TaskFormProps> = ({ onTaskAdded }) => {
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [status, setStatus] = useState<TaskStatus>(TaskStatus.TO_DO);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!title.trim()) {
-      setError('Title is required');
-      return;
-    }
-    
-    try {
-      setIsLoading(true);
-      setError(null);
-      
-      await createTask({
-        title,
-        description: description || undefined,
-        status
-      });
-      
-      setTitle('');
-      setDescription('');
-      setStatus(TaskStatus.TO_DO);
-      onTaskAdded();
-    } catch (err) {
-      setError('Failed to create task. Please try again.');
-      console.error(err);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const {
+    values,
+    errors,
+    isLoading,
+    error,
+    handleChange,
+    handleSubmit
+  } = useTaskForm({
+    onSuccess: onTaskAdded
+  });
 
   return (
     <form onSubmit={handleSubmit}>
@@ -58,12 +33,15 @@ const TaskForm: React.FC<TaskFormProps> = ({ onTaskAdded }) => {
         <input
           type="text"
           id="title"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
+          value={values.title}
+          onChange={(e) => handleChange('title', e.target.value)}
           className="form-input"
           placeholder="Enter task title"
           disabled={isLoading}
         />
+        {errors.title && (
+          <div className="text-red-500 text-sm mt-1">{errors.title}</div>
+        )}
       </div>
       
       <div className="mb-2">
@@ -72,8 +50,8 @@ const TaskForm: React.FC<TaskFormProps> = ({ onTaskAdded }) => {
         </label>
         <textarea
           id="description"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
+          value={values.description || ''}
+          onChange={(e) => handleChange('description', e.target.value)}
           className="form-input"
           rows={2}
           placeholder="Optional description"
@@ -87,8 +65,8 @@ const TaskForm: React.FC<TaskFormProps> = ({ onTaskAdded }) => {
         </label>
         <select
           id="status"
-          value={status}
-          onChange={(e) => setStatus(e.target.value as TaskStatus)}
+          value={values.status}
+          onChange={(e) => handleChange('status', e.target.value as TaskStatus)}
           className="form-input"
           disabled={isLoading}
         >
@@ -102,7 +80,7 @@ const TaskForm: React.FC<TaskFormProps> = ({ onTaskAdded }) => {
         <button
           type="submit"
           className="btn btn-primary"
-          disabled={isLoading || !title.trim()}
+          disabled={isLoading || !values.title.trim()}
         >
           {isLoading ? 'Saving...' : 'Save Task'}
         </button>
