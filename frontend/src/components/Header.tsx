@@ -6,7 +6,7 @@ const Header: React.FC = () => {
     <header className="bg-blue-500 text-white p-4">
       <div className="container mx-auto">
         <Link to="/" className="font-bold">
-          Task Manager
+          taskr
         </Link>
       </div>
     </header>
